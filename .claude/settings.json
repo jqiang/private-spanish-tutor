@@ -10,7 +10,12 @@
       "Bash(npm run *)",
       "Bash(pkill -f \"next dev\")",
       "Bash(pkill -f \"next-server\")",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git config *)",
+      "Bash(grep -iE \"\\\\.env\\($|\\\\.local\\)|dev\\\\.db\")",
+      "Bash(git remote *)",
+      "Bash(awk -F= '/^OPENAI_API_KEY=/{ *)",
+      "Bash(awk -F= '/^ANTHROPIC_API_KEY=/{v=substr\\($0,index\\($0,\"=\"\\)+1\\); print \"anthropic key length: \" length\\(v\\)}' .env.local)"
     ]
   }
 }

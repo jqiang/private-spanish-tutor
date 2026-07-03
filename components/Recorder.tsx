@@ -18,6 +18,9 @@ export default function Recorder({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  // True while the button/spacebar is held. Guards the getUserMedia race:
+  // if the user releases before the mic is ready, we don't record silence.
+  const holdingRef = useRef(false);
 
   const stateRef = useRef<RecState>("idle");
   useEffect(() => {
@@ -33,6 +36,13 @@ export default function Recorder({
     if (disabled || stateRef.current !== "idle") return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Released during mic warm-up → abort instead of recording silence.
+      if (!holdingRef.current) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+
       streamRef.current = stream;
       chunksRef.current = [];
 
@@ -46,8 +56,10 @@ export default function Recorder({
       recorder.onstop = async () => {
         stopTracks();
         const blob = new Blob(chunksRef.current, { type: mimeType });
-        if (blob.size === 0) {
+        // A real utterance is tens of KB; Opus compresses silence to ~1–2KB.
+        if (blob.size < 4000) {
           setState("idle");
+          onError("Recording too short or silent — hold and speak clearly.");
           return;
         }
         setState("transcribing");
@@ -68,7 +80,9 @@ export default function Recorder({
           setState("idle");
         }
       };
-      recorder.start();
+      // Timeslice so audio flushes in chunks (more robust than a single
+      // blob delivered only on stop, especially for short recordings).
+      recorder.start(250);
       recorderRef.current = recorder;
       setState("recording");
     } catch {
@@ -79,9 +93,18 @@ export default function Recorder({
   }, [disabled, onError, onTranscript, stopTracks]);
 
   const stop = useCallback(() => {
-    if (stateRef.current !== "recording") return;
-    recorderRef.current?.stop();
+    if (stateRef.current === "recording") recorderRef.current?.stop();
   }, []);
+
+  const begin = useCallback(() => {
+    holdingRef.current = true;
+    void start();
+  }, [start]);
+
+  const end = useCallback(() => {
+    holdingRef.current = false;
+    stop();
+  }, [stop]);
 
   // Spacebar push-to-talk (ignore when typing in the text input).
   useEffect(() => {
@@ -94,13 +117,13 @@ export default function Recorder({
     const down = (e: KeyboardEvent) => {
       if (e.code === "Space" && !e.repeat && !isTyping(e.target)) {
         e.preventDefault();
-        start();
+        begin();
       }
     };
     const up = (e: KeyboardEvent) => {
       if (e.code === "Space" && !isTyping(e.target)) {
         e.preventDefault();
-        stop();
+        end();
       }
     };
     window.addEventListener("keydown", down);
@@ -110,7 +133,7 @@ export default function Recorder({
       window.removeEventListener("keyup", up);
       stopTracks();
     };
-  }, [start, stop, stopTracks]);
+  }, [begin, end, stopTracks]);
 
   const label =
     state === "recording"
@@ -123,9 +146,9 @@ export default function Recorder({
     <button
       type="button"
       disabled={disabled || state === "transcribing"}
-      onPointerDown={start}
-      onPointerUp={stop}
-      onPointerLeave={stop}
+      onPointerDown={begin}
+      onPointerUp={end}
+      onPointerLeave={end}
       className={`select-none rounded-full px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-40 ${
         state === "recording"
           ? "bg-red-600"
