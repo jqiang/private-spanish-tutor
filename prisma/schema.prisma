@@ -1,0 +1,51 @@
+// Spanish Tutor — revision store (mistakes + vocabulary).
+// Prisma 7 with the libSQL driver adapter (local SQLite file in dev; Turso in prod).
+// Datasource URL is configured in prisma.config.ts via DATABASE_URL.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  startedAt DateTime @default(now())
+  turns     Turn[]
+}
+
+model Turn {
+  id        String    @id @default(cuid())
+  sessionId String
+  session   Session   @relation(fields: [sessionId], references: [id])
+  userText  String
+  replyText String
+  createdAt DateTime  @default(now())
+  mistakes  Mistake[]
+}
+
+model Mistake {
+  id          String   @id @default(cuid())
+  turnId      String
+  turn        Turn     @relation(fields: [turnId], references: [id])
+  original    String
+  corrected   String
+  explanation String
+  type        String // grammar | vocabulary | naturalness | spelling
+  createdAt   DateTime @default(now())
+}
+
+model VocabItem {
+  id        String   @id @default(cuid())
+  spanish   String   @unique // upsert: repeated gaps increment timesSeen
+  english   String
+  example   String
+  source    String // asked | code-switch | circumlocution | introduced
+  timesSeen Int      @default(1)
+  learned   Boolean  @default(false)
+  firstSeen DateTime @default(now())
+  lastSeen  DateTime @updatedAt
+}

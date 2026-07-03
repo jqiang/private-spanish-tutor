@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(npx --yes create-next-app@latest . --typescript --tailwind --app --no-src-dir --import-alias \"@/*\" --use-npm --eslint --yes)",
-      "npx *"
+      "Bash(npm install *)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Bash(npx prisma *)",
+      "Bash(node -e \"const m=require\\('@prisma/adapter-libsql'\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(npm run *)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(pkill -f \"next-server\")",
+      "Bash(git add *)"
     ]
   }
 }
