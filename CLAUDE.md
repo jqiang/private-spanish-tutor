@@ -68,10 +68,11 @@ prisma/schema.prisma
 
 ## Build phases (from the plan)
 
-- **Phase 1 — MVP (local):** ✅ scaffold + Prisma + `/api/chat` + text chat UI + correction/vocab/translation rendering.
-  ⏳ remaining: `/api/stt` + push-to-talk Recorder, `/api/tts` + auto-play.
-- **Phase 2 — Deploy & secure:** `proxy.ts` password auth, Turso migration, Vercel + custom domain,
-  provider spend caps + daily turn limiter, PWA.
+- **Phase 1 — MVP (local):** ✅ scaffold + Prisma + `/api/chat` + text chat UI + correction/vocab/translation
+  rendering + `/api/stt` + push-to-talk Recorder + `/api/tts` + auto-play.
+- **Phase 2 — Deploy & secure:** ✅ `proxy.ts` password auth (`/login`, `/api/login`), daily turn limiter (429),
+  PWA manifest + icons, Turso schema applied. TDD'd with Vitest (`npm test`).
+  ⏳ manual infra (see [DEPLOY.md](DEPLOY.md)): Vercel env vars + deploy, custom domain, provider spend caps.
 - **Phase 3 — Revision & polish:** `/review` page, streaming, settings panel, error handling, mobile.
 - **Phase 4 — Optional:** spaced-repetition, scenario mode, session summary, weekly digest.
 
