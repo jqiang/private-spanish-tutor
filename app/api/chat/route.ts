@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import prisma from "@/lib/db";
 import { buildSystemPrompt } from "@/lib/prompt";
+import { checkDailyLimit } from "@/lib/rateLimit";
 import { teacherTool, TEACHER_TOOL_NAME } from "@/lib/teacherTool";
 import type { CefrLevel, ChatTurn, TeacherResponse } from "@/lib/types";
 
@@ -44,6 +45,20 @@ export async function POST(req: Request) {
       { error: "No user message found." },
       { status: 400 },
     );
+  }
+
+  // App-level kill switch: cap turns/day even if the auth cookie leaks (§9.2.4).
+  // Best-effort — a counting failure must not take the tutor down.
+  try {
+    const { exceeded } = await checkDailyLimit(prisma);
+    if (exceeded) {
+      return Response.json(
+        { error: "Daily practice limit reached. Come back tomorrow." },
+        { status: 429 },
+      );
+    }
+  } catch (err) {
+    console.error("Daily limit check failed (continuing):", err);
   }
 
   // Keep only the last ~20 turns to bound token usage.

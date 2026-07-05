@@ -149,7 +149,7 @@ export default function Recorder({
       onPointerDown={begin}
       onPointerUp={end}
       onPointerLeave={end}
-      className={`select-none rounded-full px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-40 ${
+      className={`w-full shrink-0 select-none rounded-full px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-40 sm:w-auto ${
         state === "recording"
           ? "bg-red-600"
           : "bg-emerald-600 hover:bg-emerald-700"
