@@ -93,7 +93,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-slate-50">
+    <div className="flex h-[100dvh] flex-col bg-slate-50">
       <audio ref={audioRef} hidden />
 
       <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
@@ -134,7 +134,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-6">
         <div className="mx-auto flex max-w-2xl flex-col gap-6">
           {messages.length === 0 && (
             <p className="text-center text-sm text-slate-400">
@@ -169,8 +169,8 @@ export default function Home() {
         </div>
       </div>
 
-      <footer className="border-t border-slate-200 bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-2xl items-center gap-2">
+      <footer className="border-t border-slate-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto flex max-w-2xl flex-col gap-2 sm:flex-row sm:items-center">
           <Recorder
             disabled={loading}
             onTranscript={(t) => void runTurn(t)}
@@ -181,18 +181,18 @@ export default function Home() {
               e.preventDefault();
               void runTurn(input);
             }}
-            className="flex flex-1 gap-2"
+            className="flex min-w-0 flex-1 gap-2"
           >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Escribe en español…"
-              className="flex-1 rounded-full border border-slate-300 px-4 py-2 focus:border-slate-500 focus:outline-none"
+              className="min-w-0 flex-1 rounded-full border border-slate-300 px-4 py-2 focus:border-slate-500 focus:outline-none"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="rounded-full bg-slate-800 px-5 py-2 font-medium text-white disabled:opacity-40"
+              className="shrink-0 rounded-full bg-slate-800 px-5 py-2 font-medium text-white disabled:opacity-40"
             >
               Enviar
             </button>
