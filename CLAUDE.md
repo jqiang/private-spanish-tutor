@@ -73,7 +73,10 @@ prisma/schema.prisma
 - **Phase 2 — Deploy & secure:** ✅ `proxy.ts` password auth (`/login`, `/api/login`), daily turn limiter (429),
   PWA manifest + icons, Turso schema applied. TDD'd with Vitest (`npm test`).
   ⏳ manual infra (see [DEPLOY.md](DEPLOY.md)): Vercel env vars + deploy, custom domain, provider spend caps.
-- **Phase 3 — Revision & polish:** `/review` page, streaming, settings panel, error handling, mobile.
+- **Phase 3 — Revision & polish:** ✅ `/review` page (mistakes + vocab tabs, mark-learned, CSV export
+  via `/api/review`), streaming teacher reply (SSE over forced tool-use), settings panel (level, TTS speed,
+  speak-corrections; persisted to `localStorage`), error handling (mic/network/rate-limit/empty-recording via
+  `lib/errors`), mobile layout pass. Data/API layer TDD'd with Vitest (`npm test`); UI verified via build typecheck.
 - **Phase 4 — Optional:** spaced-repetition, scenario mode, session summary, weekly digest.
 
 ## Conventions

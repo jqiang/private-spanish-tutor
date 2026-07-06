@@ -1,6 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  classifyError,
+  classifyHttpStatus,
+  isEmptyRecording,
+  toUserMessage,
+} from "@/lib/errors";
 
 type RecState = "idle" | "recording" | "transcribing";
 
@@ -57,9 +63,9 @@ export default function Recorder({
         stopTracks();
         const blob = new Blob(chunksRef.current, { type: mimeType });
         // A real utterance is tens of KB; Opus compresses silence to ~1–2KB.
-        if (blob.size < 4000) {
+        if (isEmptyRecording(blob) || blob.size < 4000) {
           setState("idle");
-          onError("Recording too short or silent — hold and speak clearly.");
+          onError(toUserMessage("empty-recording"));
           return;
         }
         setState("transcribing");
@@ -68,14 +74,14 @@ export default function Recorder({
           form.append("audio", blob, "speech.webm");
           const res = await fetch("/api/stt", { method: "POST", body: form });
           if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            throw new Error(data.error ?? `STT failed (${res.status}).`);
+            onError(toUserMessage(classifyHttpStatus(res.status)));
+            return;
           }
           const { transcript } = await res.json();
           if (transcript) onTranscript(transcript);
-          else onError("No speech detected. Try again.");
+          else onError(toUserMessage("empty-recording"));
         } catch (err) {
-          onError(err instanceof Error ? err.message : "Transcription failed.");
+          onError(toUserMessage(classifyError(err)));
         } finally {
           setState("idle");
         }
@@ -85,8 +91,8 @@ export default function Recorder({
       recorder.start(250);
       recorderRef.current = recorder;
       setState("recording");
-    } catch {
-      onError("Microphone access denied or unavailable.");
+    } catch (err) {
+      onError(toUserMessage(classifyError(err)));
       stopTracks();
       setState("idle");
     }
