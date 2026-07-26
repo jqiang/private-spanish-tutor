@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import prisma from "@/lib/db";
+import { PROFILE_ID as MEMORY_PROFILE_ID } from "@/lib/memory";
 import { buildSystemPrompt } from "@/lib/prompt";
 import { checkDailyLimit } from "@/lib/rateLimit";
 import {
@@ -131,12 +132,24 @@ export async function POST(req: Request) {
     content: m.text,
   }));
 
+  // Long-term learner memory (see lib/memory.ts). Best-effort — the tutor
+  // works fine without it, so a DB error must not block the reply.
+  let memory = "";
+  try {
+    const profile = await prisma.learnerProfile.findUnique({
+      where: { id: MEMORY_PROFILE_ID },
+    });
+    memory = profile?.content ?? "";
+  } catch (err) {
+    console.error("Memory read failed (continuing):", err);
+  }
+
   const client = new Anthropic();
 
   const anthropicArgs = {
     model: MODEL,
     max_tokens: 2000,
-    system: buildSystemPrompt(level),
+    system: buildSystemPrompt(level, memory),
     tools: [teacherTool],
     tool_choice: { type: "tool" as const, name: TEACHER_TOOL_NAME },
     messages: history,

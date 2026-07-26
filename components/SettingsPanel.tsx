@@ -7,7 +7,8 @@ import type { CefrLevel } from "@/lib/types";
 const LEVELS: CefrLevel[] = ["A1", "A2", "B1", "B2"];
 
 // Settings popover (Phase 3, item 12). Replaces the ad-hoc header controls.
-// Pure presentation: the parent owns the Settings object and persistence.
+// Pure presentation for Settings (the parent owns the object and persistence);
+// the memory button is self-contained since it touches no parent state.
 export default function SettingsPanel({
   settings,
   onChange,
@@ -18,7 +19,24 @@ export default function SettingsPanel({
   onNewSession: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [memoryState, setMemoryState] = useState<
+    "idle" | "working" | "done" | "error"
+  >("idle");
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Consolidate the tutor's long-term memory on demand ("lock in" the current
+  // conversation without waiting for the next app open).
+  const updateMemory = async () => {
+    if (memoryState === "working") return;
+    setMemoryState("working");
+    try {
+      const res = await fetch("/api/memory", { method: "POST" });
+      if (!res.ok) throw new Error(`memory update failed (${res.status})`);
+      setMemoryState("done");
+    } catch {
+      setMemoryState("error");
+    }
+  };
 
   // Close on outside click / Escape.
   useEffect(() => {
@@ -138,6 +156,27 @@ export default function SettingsPanel({
               className="h-5 w-5 accent-slate-800"
             />
           </label>
+
+          {/* Long-term memory */}
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={() => void updateMemory()}
+              disabled={memoryState === "working"}
+              className="h-11 w-full rounded-lg border border-slate-300 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+            >
+              {memoryState === "working"
+                ? "Updating memory…"
+                : "Update memory now"}
+            </button>
+            <p className="mt-1 text-xs text-slate-400" aria-live="polite">
+              {memoryState === "done"
+                ? "Memory updated."
+                : memoryState === "error"
+                  ? "Update failed — try again later."
+                  : "The tutor keeps a short profile of you. View it in Review → Memory."}
+            </p>
+          </div>
 
           <button
             type="button"

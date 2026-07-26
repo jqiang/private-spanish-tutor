@@ -26,14 +26,25 @@ turso db tokens create spanish-tutor       # -> TURSO_AUTH_TOKEN
 
 Apply the schema to Turso (run once, and after each schema change). The Prisma
 CLI reads its URL from `.env` (not `.env.local`) and doesn't carry the Turso auth
-token, so the reliable way to apply migrations is the Turso shell:
+token, so the reliable way to apply migrations is the Turso shell. Migration
+folders are timestamp-prefixed, so glob order is chronological — but a `<` glob
+redirect only works with a single match, so loop:
 
 ```bash
-turso db shell spanish-tutor < prisma/migrations/*/migration.sql
+# first-time setup: apply every migration in order
+for f in prisma/migrations/*/migration.sql; do
+  turso db shell spanish-tutor < "$f"
+done
+
+# after a schema change: apply only the new migration
+turso db shell spanish-tutor < prisma/migrations/<timestamp>_<name>/migration.sql
 ```
 
+(Re-running an already-applied migration fails with "table already exists" —
+that just means it's applied; skip it.)
+
 Verify: `turso db shell spanish-tutor ".tables"` should list
-`Mistake  Session  Turn  VocabItem`.
+`LearnerProfile  Mistake  Session  Turn  VocabItem`.
 
 > **Do not** put the Turso `DATABASE_URL`/`TURSO_AUTH_TOKEN` in `.env.local` —
 > Next loads `.env.local` above `.env`, so local dev would hit Turso instead of

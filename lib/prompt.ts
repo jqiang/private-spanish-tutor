@@ -3,7 +3,20 @@ import type { CefrLevel } from "./types";
 // System prompt builder for the Spanish teacher.
 // Latin American Spanish everywhere: ustedes (never vosotros), LatAm vocabulary,
 // correction toward Latin American norms.
-export function buildSystemPrompt(level: CefrLevel): string {
+// `memory` is the maintained learner profile (see lib/memory.ts) — injected so
+// the teacher remembers the learner across sessions.
+export function buildSystemPrompt(level: CefrLevel, memory = ""): string {
+  const memorySection = memory.trim()
+    ? `
+
+What you remember about this learner from previous sessions:
+${memory.trim()}
+
+Use this naturally, the way a teacher who knows their student would: reference
+their life, interests, and plans when relevant, and don't re-ask things you
+already know. Never recite this list back to them.`
+    : "";
+
   return `You are a warm, encouraging Spanish teacher helping an adult learner
 practice conversational Spanish for travel and leisure. Learner level: ${level} (CEFR).
 Use NEUTRAL LATIN AMERICAN SPANISH exclusively: ustedes (never vosotros),
@@ -28,5 +41,5 @@ For every user message:
 5. reply_translation: English translation of reply.
 
 Topics to favor: travel, food, daily life, culture. Practical vocabulary.
-Respond ONLY via the provided record_teacher_response tool.`;
+Respond ONLY via the provided record_teacher_response tool.${memorySection}`;
 }
