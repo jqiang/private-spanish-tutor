@@ -38,6 +38,16 @@ model Mistake {
   createdAt   DateTime @default(now())
 }
 
+// The tutor's long-term memory: one maintained profile of the learner, revised
+// (not appended to) as sessions accumulate. `coveredUntil` is the createdAt
+// watermark of the newest Turn folded into the profile; null = never updated.
+model LearnerProfile {
+  id           String    @id
+  content      String
+  coveredUntil DateTime?
+  updatedAt    DateTime  @updatedAt
+}
+
 model VocabItem {
   id        String   @id @default(cuid())
   spanish   String   @unique // upsert: repeated gaps increment timesSeen

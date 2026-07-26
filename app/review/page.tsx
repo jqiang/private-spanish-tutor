@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import ReviewMemory from "@/components/ReviewMemory";
 import ReviewMistakes from "@/components/ReviewMistakes";
 import ReviewVocab from "@/components/ReviewVocab";
 
-type Tab = "mistakes" | "vocab";
+type Tab = "mistakes" | "vocab" | "memory";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "mistakes", label: "Mistakes" },
   { key: "vocab", label: "Vocabulary" },
+  { key: "memory", label: "Memory" },
 ];
 
 export default function ReviewPage() {
@@ -21,7 +23,7 @@ export default function ReviewPage() {
         <h1 className="text-lg font-semibold text-slate-800">
           Review
           <span className="ml-2 text-xs font-normal text-slate-400">
-            mistakes &amp; vocabulary
+            mistakes, vocabulary &amp; memory
           </span>
         </h1>
         <Link
@@ -51,7 +53,13 @@ export default function ReviewPage() {
             ))}
           </div>
 
-          {tab === "mistakes" ? <ReviewMistakes /> : <ReviewVocab />}
+          {tab === "mistakes" ? (
+            <ReviewMistakes />
+          ) : tab === "vocab" ? (
+            <ReviewVocab />
+          ) : (
+            <ReviewMemory />
+          )}
         </div>
       </div>
     </div>

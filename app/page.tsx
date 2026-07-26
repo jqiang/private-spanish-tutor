@@ -43,6 +43,17 @@ export default function Home() {
     setSettings(loadSettings(window.localStorage));
   }, []);
 
+  // Lazy memory consolidation: fold any turns from previous sessions into the
+  // tutor's long-term memory (no-op server-side when nothing is new).
+  // Fire-and-forget — chat works fine without it. The ref guards against the
+  // duplicate effect run in React strict mode (dev) double-calling Claude.
+  const memorySyncFired = useRef(false);
+  useEffect(() => {
+    if (memorySyncFired.current) return;
+    memorySyncFired.current = true;
+    fetch("/api/memory", { method: "POST" }).catch(() => {});
+  }, []);
+
   const updateSettings = useCallback((next: Settings) => {
     setSettings(next);
     saveSettings(window.localStorage, next);

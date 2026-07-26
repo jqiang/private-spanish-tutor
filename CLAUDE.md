@@ -53,15 +53,18 @@ Secrets are server-side only — never `NEXT_PUBLIC_*`. See `.env.example`.
 app/
   page.tsx              # main chat screen (client component)
   api/chat/route.ts     # history -> teacher JSON (forced tool-use); persists mistakes/vocab
+  api/memory/route.ts   # learner memory: GET / POST (consolidate via Claude) / PUT (manual edit)
   generated/prisma/     # generated Prisma client (gitignored)
 components/
   AssistantTurn.tsx     # renders corrections + vocab + answer + reply w/ translation toggle
   CorrectionCard.tsx    # amber card: original -> corrected + explanation
   VocabChip.tsx         # green chip, tap to reveal example
+  ReviewMemory.tsx      # /review Memory tab: view/edit/refresh the learner profile
 lib/
   db.ts                 # Prisma client singleton (libSQL adapter)
   types.ts              # Correction, VocabGap, TeacherResponse, ChatMessage
-  prompt.ts             # system prompt builder (LatAm Spanish)
+  prompt.ts             # system prompt builder (LatAm Spanish + memory injection)
+  memory.ts             # learner-memory merge prompt + pure helpers
   teacherTool.ts        # the record_teacher_response tool schema
 prisma/schema.prisma
 ```
@@ -77,7 +80,10 @@ prisma/schema.prisma
   via `/api/review`), streaming teacher reply (SSE over forced tool-use), settings panel (level, TTS speed,
   speak-corrections; persisted to `localStorage`), error handling (mic/network/rate-limit/empty-recording via
   `lib/errors`), mobile layout pass. Data/API layer TDD'd with Vitest (`npm test`); UI verified via build typecheck.
-- **Phase 4 — Optional:** spaced-repetition, scenario mode, session summary, weekly digest.
+- **Phase 4 — Optional:** ✅ learner memory (`LearnerProfile` singleton: one maintained profile the tutor
+  revises — not appends — from new turns via a Claude merge call; auto-consolidated on app open using the
+  `coveredUntil` watermark, manual trigger in settings, view/edit in `/review` → Memory; injected into the
+  teacher system prompt). ⏳ spaced-repetition, scenario mode, session summary, weekly digest.
 
 ## Conventions
 
